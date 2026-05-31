@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator, ScrollView, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator, ScrollView, TextInput, Linking } from 'react-native';
 import { SafeAreaView, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const API_KEY = '2a8c0216dfb393e18e9edff711dc1c48';
@@ -71,6 +71,8 @@ function MainApp() {
   const [peliculasVistas, setPeliculasVistas] = useState([]);
   const [peliculasFavoritas, setPeliculasFavoritas] = useState([]);
   const [peliculasVerDespues, setPeliculasVerDespues] = useState([]);
+  const [activeTab, setActiveTab] = useState('info');
+  const [trailerKey, setTrailerKey] = useState(null);
   const [categories, setCategories] = useState([]);
   const [movieCategories, setMovieCategories] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
@@ -176,9 +178,19 @@ function MainApp() {
   const openMovieDetail = (movie) => {
     setSelectedMovie(movie);
     setMovieDetails(null);
+    setTrailerKey(null);
+    setActiveTab('info');
+    
     fetch(`${BASE_URL}/movie/${movie.id}?api_key=${API_KEY}&language=es-ES&append_to_response=credits`)
       .then(res => res.json())
       .then(data => setMovieDetails(data));
+
+    fetch(`${BASE_URL}/movie/${movie.id}/videos?api_key=${API_KEY}&language=es-ES`)
+      .then(res => res.json())
+      .then(data => {
+        const trailer = data.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+        if (trailer) setTrailerKey(trailer.key);
+      });
   };
 
   return (
@@ -186,12 +198,86 @@ function MainApp() {
       <View style={styles.content}>
         {activeSection === 'Películas' ? (
           selectedMovie ? (
-            <ScrollView contentContainerStyle={{ padding: 20 }}>
-              <Image source={{ uri: `https://image.tmdb.org/t/p/w500${selectedMovie.poster_path}` }} style={styles.detailImage} />
-              <Text style={styles.detailTitle}>{selectedMovie.title}</Text>
+  <View style={{ flex: 1 }}>
+
+    {/* BARRA DE PESTAÑAS */}
+    <View style={{ flexDirection: 'row', backgroundColor: '#111', borderBottomWidth: 1, borderBottomColor: '#333' }}>
+
+      <TouchableOpacity
+  onPress={() => { setSelectedMovie(null); setActiveTab('info'); }}
+  style={{ paddingHorizontal: 12, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'info' ? '#E50914' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
+>
+  <Text style={{ fontSize: 18 }}>←</Text>
+</TouchableOpacity>
+
+<TouchableOpacity
+  onPress={() => setActiveTab('info')}
+  style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'info' ? '#E50914' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
+>
+  <Text style={{ fontSize: 22 }}>🎬</Text>
+</TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => setActiveTab('puntuacion')}
+        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'puntuacion' ? '#E50914' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
+      >
+        <Text style={{ fontSize: 22 }}>⭐</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => setActiveTab('reparto')}
+        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'reparto' ? '#E50914' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
+      >
+        <Text style={{ fontSize: 22 }}>👥</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => setActiveTab('similar')}
+        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'similar' ? '#E50914' : '#1A1A1A' }}
+      >
+        <Text style={{ fontSize: 22 }}>🎲</Text>
+      </TouchableOpacity>
+
+    </View>
+
+    <ScrollView contentContainerStyle={{ padding: 20 }}>
+    {trailerKey && (
+  <TouchableOpacity
+    style={{ backgroundColor: '#E50914', padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 20, flexDirection: 'row', justifyContent: 'center', gap: 10 }}
+    onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${trailerKey}`)}
+  >
+    <Text style={{ color: 'white', fontSize: 20 }}>▶️</Text>
+    <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>VER TRAILER</Text>
+  </TouchableOpacity>
+)}
+              {/* POSTER + DATOS */}
+<View style={{ flexDirection: 'row', marginBottom: 20 }}>
+  
+  <View style={{ flex: 1, justifyContent: 'space-around', paddingRight: 10 }}>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>🎥 {movieDetails?.credits?.crew?.find(c => c.job === 'Director')?.name || '...'}</Text>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>⏱ {movieDetails?.runtime} min</Text>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>🌍 {movieDetails?.production_countries?.[0]?.name || '...'}</Text>
+  </View>
+
+  <Image 
+    source={{ uri: `https://image.tmdb.org/t/p/w300${selectedMovie.poster_path}` }} 
+    style={{ width: 120, height: 180, borderRadius: 12 }} 
+  />
+
+  <View style={{ flex: 1, justifyContent: 'space-around', paddingLeft: 10 }}>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>📅 {movieDetails?.release_date?.substring(0, 4) || '...'}</Text>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>🗣️ {movieDetails?.original_language?.toUpperCase() || '...'}</Text>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>🔞 {movieDetails?.adult ? '+18' : 'ATP'}</Text>
+  </View>
+
+</View>
+
+{/* NOMBRE Y VALORACION */}
+<Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>{selectedMovie.title}</Text>
+<Text style={{ color: '#E50914', fontSize: 16, marginTop: 4, marginBottom: 16 }}>⭐ {movieDetails?.vote_average?.toFixed(1)} TMDB</Text>
               {movieDetails && (
                 <>
-                  <Text style={styles.sectionTitle}>📖 Descripción</Text>
+                <Text style={styles.sectionTitle}>📖 Descripción</Text>
                   <Text style={styles.detailOverview}>{movieDetails.overview}</Text>
 
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, marginBottom: 10, gap: 8 }}>
@@ -244,16 +330,6 @@ function MainApp() {
                     </TouchableOpacity>
                   </View>
 
-                  <Text style={styles.sectionTitle}>🎬 Detalles</Text>
-                  <Text style={styles.extraInfo}>⏱ Duración: {movieDetails.runtime} min</Text>
-                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 8 }}>
-                    {movieDetails.genres?.map(g => (
-                      <Text key={g.id} style={{ backgroundColor: '#222', color: 'white', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 15, marginRight: 6, marginBottom: 6, fontSize: 12 }}>{g.name}</Text>
-                    ))}
-                  </View>
-                  <Text style={styles.extraInfo}>⭐ Valoración: {movieDetails.vote_average?.toFixed(1)}</Text>
-                  <Text style={styles.extraInfo}>📅 Fecha: {movieDetails.release_date}</Text>
-
                   <Text style={styles.sectionTitle}>🎬 Reparto</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     {movieDetails.credits?.cast?.slice(0, 10).map(actor => (
@@ -265,10 +341,8 @@ function MainApp() {
                   </ScrollView>
                 </>
               )}
-              <TouchableOpacity onPress={() => setSelectedMovie(null)} style={styles.floatingBackButton}>
-                <Text style={{ color: 'white', fontSize: 18 }}>←</Text>
-              </TouchableOpacity>
             </ScrollView>
+            </View>
           ) : (
             <View style={{ flex: 1 }}>
               <View style={styles.searchContainer}>
@@ -327,7 +401,7 @@ function MainApp() {
                             <Image source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }} style={{ width: 110, height: 160, borderRadius: 8 }} />
                           </TouchableOpacity>
                         )}
-                      />
+                       />
                     </View>
                   )}
                 />
