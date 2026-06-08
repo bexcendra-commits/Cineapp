@@ -89,9 +89,6 @@ function MainApp() {
   const [langFilter, setLangFilter] = useState('');
   const [showAccountScreen, setShowAccountScreen] = useState(false);
   const [accountData, setAccountData] = useState({ username: 'agustin1234', email: '', profileImage: null });
-  const [tempUsername, setTempUsername] = useState('');
-  const [tempEmail, setTempEmail] = useState('');
-  const [tempBio, setTempBio] = useState('');
 
   const theme = {
     background: darkMode ? '#0A0A0A' : '#FFFFFF',
@@ -101,7 +98,7 @@ function MainApp() {
     border: darkMode ? '#333' : '#DDD'
   };
 
-  const sections = ['Películas', 'Juegos', 'Recomendar', 'Logros', 'Perfil', 'Ajustes'];
+  const sections = ['Películas', 'Recomendar', 'Logros', 'Perfil', 'Ajustes'];
 
   useEffect(() => {
     fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=es-ES`)
@@ -201,39 +198,39 @@ function MainApp() {
   <View style={{ flex: 1 }}>
 
     {/* BARRA DE PESTAÑAS */}
-    <View style={{ flexDirection: 'row', backgroundColor: '#111', borderBottomWidth: 1, borderBottomColor: '#333' }}>
+    <View style={{ flexDirection: 'row', backgroundColor: '#0F0F0F', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }}>
 
       <TouchableOpacity
   onPress={() => { setSelectedMovie(null); setActiveTab('info'); }}
-  style={{ paddingHorizontal: 12, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'info' ? '#E50914' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
+  style={{ paddingHorizontal: 12, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'info' ? 'rgba(201,168,76,0.2)' : '#1A1A1A',borderRightWidth: 1, borderRightColor: '#333' }}
 >
   <Text style={{ fontSize: 18 }}>←</Text>
 </TouchableOpacity>
 
 <TouchableOpacity
   onPress={() => setActiveTab('info')}
-  style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'info' ? '#E50914' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
+  style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'info' ? 'rgba(201,168,76,0.2)' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
 >
   <Text style={{ fontSize: 22 }}>🎬</Text>
 </TouchableOpacity>
 
       <TouchableOpacity
         onPress={() => setActiveTab('puntuacion')}
-        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'puntuacion' ? '#E50914' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
+        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'puntuacion' ? 'rgba(201,168,76,0.2)' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
       >
         <Text style={{ fontSize: 22 }}>⭐</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         onPress={() => setActiveTab('reparto')}
-        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'reparto' ? '#E50914' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
+        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'reparto' ? 'rgba(201,168,76,0.2)' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
       >
         <Text style={{ fontSize: 22 }}>👥</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         onPress={() => setActiveTab('similar')}
-        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'similar' ? '#E50914' : '#1A1A1A' }}
+        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'similar' ? 'rgba(201,168,76,0.2)' : '#1A1A1A' }}
       >
         <Text style={{ fontSize: 22 }}>🎲</Text>
       </TouchableOpacity>
@@ -243,13 +240,12 @@ function MainApp() {
     <ScrollView contentContainerStyle={{ padding: 20 }}>
     {trailerKey && (
   <TouchableOpacity
-    style={{ backgroundColor: '#E50914', padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 20, flexDirection: 'row', justifyContent: 'center', gap: 10 }}
-    onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${trailerKey}`)}
-  >
-    <Text style={{ color: 'white', fontSize: 20 }}>▶️</Text>
-    <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>VER TRAILER</Text>
-  </TouchableOpacity>
-)}
+  style={{ backgroundColor: '#C9A84C', padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 20, flexDirection: 'row', justifyContent: 'center', gap: 10 }}
+  onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${trailerKey}`)}
+>
+  <Text style={{ color: '#080808', fontSize: 16, fontWeight: 'bold' }}>▶  VER TRAILER</Text>
+</TouchableOpacity>
+  )}
               {/* POSTER + DATOS */}
 <View style={{ flexDirection: 'row', marginBottom: 20 }}>
   
@@ -274,7 +270,7 @@ function MainApp() {
 
 {/* NOMBRE Y VALORACION */}
 <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>{selectedMovie.title}</Text>
-<Text style={{ color: '#E50914', fontSize: 16, marginTop: 4, marginBottom: 16 }}>⭐ {movieDetails?.vote_average?.toFixed(1)} TMDB</Text>
+<Text style={{ color: '#C9A84C', fontSize: 16, marginTop: 4, marginBottom: 16 }}>★ {movieDetails?.vote_average?.toFixed(1)} TMDB</Text>
               {movieDetails && (
                 <>
                 <Text style={styles.sectionTitle}>📖 Descripción</Text>
@@ -291,7 +287,7 @@ function MainApp() {
                           setPeliculasVistas([...peliculasVistas, { id: selectedMovie.id, title: selectedMovie.title, poster_path: selectedMovie.poster_path }]);
                         }
                       }}
-                      style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: peliculasVistas.some(p => p.id === selectedMovie.id) ? '#1A3A1A' : '#1A1A1A', borderWidth: 1, borderColor: peliculasVistas.some(p => p.id === selectedMovie.id) ? '#4CAF50' : '#333' }}
+                      style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: peliculasVistas.some(p => p.id === selectedMovie.id) ? '#1A3A1A' : '#1A1A1A', borderWidth: 1, borderColor: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#C9A84C' : '#333' }}
                     >
                       <Text style={{ fontSize: 18 }}>{peliculasVistas.some(p => p.id === selectedMovie.id) ? '✅' : '○'}</Text>
                       <Text style={{ color: peliculasVistas.some(p => p.id === selectedMovie.id) ? '#4CAF50' : '#888', fontSize: 11, marginTop: 4 }}>Vista</Text>
@@ -307,7 +303,7 @@ function MainApp() {
                           setPeliculasFavoritas([...peliculasFavoritas, { id: selectedMovie.id, title: selectedMovie.title, poster_path: selectedMovie.poster_path }]);
                         }
                       }}
-                      style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#3A1A1A' : '#1A1A1A', borderWidth: 1, borderColor: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#E50914' : '#333' }}
+                      style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#1A1500' : '#1A1A1A', borderWidth: 1, color: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#C9A84C' : '#888' }}
                     >
                       <Text style={{ fontSize: 18 }}>{peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '❤️' : '🤍'}</Text>
                       <Text style={{ color: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#E50914' : '#888', fontSize: 11, marginTop: 4 }}>Favorita</Text>
@@ -346,21 +342,16 @@ function MainApp() {
           ) : (
             <View style={{ flex: 1 }}>
               <View style={styles.searchContainer}>
-                <TextInput placeholder="Buscar..." placeholderTextColor="#888" style={styles.searchInput} value={searchQuery} onChangeText={setSearchQuery} />
-                <TouchableOpacity style={styles.filterCircle} onPress={() => { if (showFilterMenu) { clearFilters(); setShowFilterMenu(false); } else { setShowFilterMenu(true); } }}>
-                  <Text style={{ color: 'white' }}>{showFilterMenu ? '✕' : '⚙️'}</Text>
-                </TouchableOpacity>
+  <TextInput
+    placeholder="Buscá una película…"
+    placeholderTextColor="#555"
+    style={styles.searchInput}
+    value={searchQuery}
+    onChangeText={setSearchQuery}
+  />
+  <View style={[styles.searchUnderline, searchQuery.length > 0 && styles.searchUnderlineActive]} />
               </View>
-              {showFilterMenu && (
-                <View style={styles.filterMenu}>
-                  <View style={styles.filterRow}>
-                    <TextInput placeholder="Género" placeholderTextColor="#666" style={styles.filterInput} value={genreFilter} onChangeText={setGenreFilter} />
-                    <TextInput placeholder="Año" placeholderTextColor="#666" style={styles.filterInput} value={yearFilter} keyboardType="numeric" onChangeText={setYearFilter} />
-                    <TextInput placeholder="⭐ Min" placeholderTextColor="#666" style={styles.filterInput} value={ratingFilter} keyboardType="numeric" onChangeText={setRatingFilter} />
-                    <TextInput placeholder="Idioma" placeholderTextColor="#666" style={styles.filterInput} value={langFilter} onChangeText={setLangFilter} />
-                  </View>
-                </View>
-              )}
+              
               {loading ? (
                 <ActivityIndicator size="large" color="#E50914" style={{ marginTop: 20 }} />
               ) : searchResults.length > 0 ? (
@@ -370,13 +361,13 @@ function MainApp() {
                   keyExtractor={(item, index) => item.id.toString() + index}
                   renderItem={({ item }) => (
                     <TouchableOpacity onPress={() => openMovieDetail(item)} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 15, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#1A1A1A' }}>
-                      <Image source={{ uri: `https://image.tmdb.org/t/p/w200${item.poster_path}` }} style={{ width: 55, height: 80, borderRadius: 8 }} />
+                      <Image source={{ uri: `https://image.tmdb.org/t/p/w200${item.poster_path}` }} style={{ width: 55, height: 80, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(201,168,76,0.4)' }} />
                       <View style={{ marginLeft: 15, flex: 1 }}>
                         <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }} numberOfLines={1}>{item.title}</Text>
                         <Text style={{ color: '#888', fontSize: 13, marginTop: 4 }}>
                           {item.release_date ? item.release_date.substring(0, 4) : ''}
                           {item.release_date && '  •  '}
-                          <Text style={{ color: '#E50914', fontSize: 13 }}>{item.director || ''}</Text>
+                          <Text style={{ color: '#C9A84C', fontSize: 13 }}>{item.director || ''}</Text>
                         </Text>
                       </View>
                       <Text style={{ color: '#E50914', fontSize: 20 }}>›</Text>
@@ -386,9 +377,10 @@ function MainApp() {
                 />
               ) : (
                 <FlatList
-                  data={movieCategories}
-                  keyExtractor={(item) => item.id.toString()}
-                  contentContainerStyle={{ paddingBottom: 100 }}
+  data={movieCategories}
+  keyExtractor={(item) => item.id.toString()}
+  style={{ flex: 1 }}
+  contentContainerStyle={{ paddingBottom: 500 }}
                   renderItem={({ item: cat }) => (
                     <View style={{ marginBottom: 25 }}>
                       <Text style={styles.categoryTitle}>{cat.name}</Text>
@@ -397,9 +389,14 @@ function MainApp() {
                         showsHorizontalScrollIndicator={false}
                         data={cat.movies}
                         renderItem={({ item }) => (
-                          <TouchableOpacity style={{ marginLeft: 15 }} onPress={() => openMovieDetail(item)}>
-                            <Image source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }} style={{ width: 110, height: 160, borderRadius: 8 }} />
-                          </TouchableOpacity>
+                          <TouchableOpacity style={{ marginLeft: 15, width: 110 }} onPress={() => openMovieDetail(item)}>
+  <Image source={{ uri: `https://image.tmdb.org/t/p/w500${item.poster_path}` }} style={{ width: 110, height: 160, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(201,168,76,0.4)' }} />
+  <Text style={{ color: 'white', fontSize: 11, marginTop: 6 }} numberOfLines={1}>{item.title}</Text>
+  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
+    <Text style={{ color: '#666', fontSize: 10 }}>{item.release_date?.substring(0, 4)}</Text>
+    <Text style={{ color: '#C9A84C', fontSize: 10 }}>★ {item.vote_average?.toFixed(1)}</Text>
+  </View>
+</TouchableOpacity>
                         )}
                        />
                     </View>
@@ -460,7 +457,7 @@ function MainApp() {
                   {peliculasFavoritas.map((pelicula) => (
                     <TouchableOpacity key={pelicula.id} onPress={() => { setShowFavoritasScreen(false); openMovieDetail(pelicula); }} style={{ width: '31%', marginBottom: 16 }}>
                       <Image source={{ uri: `https://image.tmdb.org/t/p/w200${pelicula.poster_path}` }} style={{ width: '100%', height: 150, borderRadius: 10 }} />
-                      <Text style={{ color: '#ccc', fontSize: 11, marginTop: 6, textAlign: 'center' }} numberOfLines={1}>{pelicula.title}</Text>
+                                            <Text style={{ color: '#ccc', fontSize: 11, marginTop: 6, textAlign: 'center' }} numberOfLines={1}>{pelicula.title}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -497,7 +494,7 @@ function MainApp() {
         ) : activeSection === 'Perfil' ? (
           <ScrollView style={styles.containerPerfil} contentContainerStyle={{ padding: 20, paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
             <View style={{ alignItems: 'center', marginBottom: 30 }}>
-              <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: '#E50914', justifyContent: 'center', alignItems: 'center', marginBottom: 12, borderWidth: 3, borderColor: '#333' }}>
+              <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: '#C9A84C', justifyContent: 'center', alignItems: 'center', marginBottom: 12, borderWidth: 3, borderColor: 'rgba(201,168,76,0.3)' }}>
                 <Text style={{ color: 'white', fontSize: 40, fontWeight: 'bold' }}>{perfilStats.username ? perfilStats.username.charAt(0).toUpperCase() : 'A'}</Text>
               </View>
               <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold', marginBottom: 6 }}>{perfilStats.username || 'agustin1234'}</Text>
@@ -505,10 +502,10 @@ function MainApp() {
             </View>
 
             <View style={{ backgroundColor: '#111', padding: 18, borderRadius: 12, marginBottom: 28 }}>
-              <Text style={{ color: '#E50914', fontSize: 16, fontWeight: '600', marginBottom: 14 }}>🎬 Mis favoritos</Text>
-              <Text style={{ color: 'white', marginBottom: 10 }}>🎭 Género favorito: <Text style={{ color: '#E50914' }}>{perfilStats.generoFavorito || 'Drama'}</Text></Text>
-              <Text style={{ color: 'white', marginBottom: 10 }}>⭐ Actor favorito: <Text style={{ color: '#E50914' }}>{perfilStats.actorFavorito || 'Leonardo DiCaprio'}</Text></Text>
-              <Text style={{ color: 'white' }}>📅 Año favorito: <Text style={{ color: '#E50914' }}>{perfilStats.anoFavorito || '2019'}</Text></Text>
+              <Text style={{ color: '#C9A84C', fontSize: 16, fontWeight: '600', marginBottom: 14 }}>🎬 Mis favoritos</Text>
+              <Text style={{ color: 'white', marginBottom: 10 }}>🎭 Género favorito: <Text style={{ color: '#C9A84C' }}>{perfilStats.generoFavorito || 'Drama'}</Text></Text>
+              <Text style={{ color: 'white', marginBottom: 10 }}>⭐ Actor favorito: <Text style={{ color: '#C9A84C' }}>{perfilStats.actorFavorito || 'Leonardo DiCaprio'}</Text></Text>
+              <Text style={{ color: 'white' }}>📅 Año favorito: <Text style={{ color: '#C9A84C' }}>{perfilStats.anoFavorito || '2019'}</Text></Text>
             </View>
 
             <View style={{ marginBottom: 32 }}>
@@ -536,7 +533,7 @@ function MainApp() {
             </View>
 
             <View style={{ backgroundColor: '#111', padding: 18, borderRadius: 12, marginBottom: 25 }}>
-              <Text style={{ color: '#E50914', fontSize: 16, fontWeight: '600', marginBottom: 16 }}>Mis estadísticas</Text>
+              <Text style={{ color: '#C9A84C', fontSize: 16, fontWeight: '600', marginBottom: 16 }}>Mis estadísticas</Text>
               <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                 <View style={{ alignItems: 'center' }}>
                   <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>{peliculasVistas.length}</Text>
@@ -567,7 +564,7 @@ function MainApp() {
                 <Text style={{ color: '#666' }}>→</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{ backgroundColor: '#1A1A1A', padding: 18, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: '#2A2A2A', marginBottom: 10 }} onPress={() => setShowFavoritasScreen(true)}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ fontSize: 22, marginRight: 12 }}>❤️</Text>
                   <View>
                     <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>Favoritas</Text>
@@ -588,16 +585,16 @@ function MainApp() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={{ backgroundColor: '#E50914', padding: 15, borderRadius: 10, alignItems: 'center' }} onPress={() => alert('Ver todas mis estadísticas')}>
+            <TouchableOpacity style={{ backgroundColor: '#C9A84C', padding: 15, borderRadius: 10, alignItems: 'center' }} onPress={() => alert('Ver todas mis estadísticas')}>
 
-              <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Ver todas mis estadísticas →</Text>
+              <Text style={{ color: '#080808', fontWeight: 'bold', fontSize: 16 }}>Ver todas mis estadísticas →</Text>
             </TouchableOpacity>
           </ScrollView>
         ) : showAccountScreen ? (
           <ScrollView style={{ flex: 1, padding: 20 }}>
             <Text style={styles.tituloSeccion}>Cuenta</Text>
             <TouchableOpacity style={{ alignItems: 'center', marginBottom: 30 }} onPress={() => alert('Cambiar foto próximamente')}>
-              <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: '#E50914', justifyContent: 'center', alignItems: 'center' }}>
+              <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: '#C9A84C', justifyContent: 'center', alignItems: 'center' }}>
                 <Text style={{ color: 'white', fontSize: 40 }}>{accountData.username.charAt(0).toUpperCase()}</Text>
               </View>
               <Text style={{ color: '#888', marginTop: 10 }}>Cambiar foto de perfil</Text>
@@ -642,7 +639,7 @@ function MainApp() {
               <Text style={{ color: notificationsEnabled ? '#4CAF50' : '#999', fontSize: 18 }}>{notificationsEnabled ? 'ON' : 'OFF'}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={{ marginTop: 30, alignItems: 'center' }} onPress={() => setShowNotificationsScreen(false)}>
-              <Text style={{ color: theme.subText }}>← Volver</Text>
+                          <Text style={{ color: theme.subText }}>← Volver</Text>
             </TouchableOpacity>
           </ScrollView>
         ) : showPrivacyScreen ? (
@@ -748,17 +745,26 @@ function MainApp() {
             ))}
           </ScrollView>
         )}
-      </View>
+              </View>
 
-      <View style={[styles.navbar, { paddingBottom: insets.bottom }]}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {sections.map((item) => (
-            <TouchableOpacity key={item} style={[styles.navButton, activeSection === item && styles.activeButton]} onPress={() => setActiveSection(item)}>
-              <Text style={styles.navText}>{item}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+      <View style={styles.navbar}>
+  {[
+  { name: 'Películas', icon: '🎬' },
+  { name: 'Recomendar', icon: '✨' },
+  { name: 'Logros', icon: '🏆' },
+  { name: 'Perfil', icon: '👤' },
+  { name: 'Ajustes', icon: '⚙️' },
+].map((item) => (
+  <TouchableOpacity
+    key={item.name}
+    style={[styles.navButton, activeSection === item.name && styles.activeButton]}
+    onPress={() => setActiveSection(item.name)}
+  >
+    <Text style={{ fontSize: 18 }}>{item.icon}</Text>
+    <Text style={[styles.navText, activeSection === item.name && styles.navTextActive]}>{item.name}</Text>
+  </TouchableOpacity>
+))}
+</View>
     </SafeAreaView>
   );
 }
@@ -772,26 +778,25 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0A' },
-  content: { flex: 1, marginBottom: 75 },
+  container: { flex: 1, backgroundColor: '#080808' },
+  
+  content: { flex: 1, marginBottom: 70 },
   inputLabel: { color: '#E50914', fontSize: 14, fontWeight: '600', marginBottom: 6, marginLeft: 4 },
   inputAjuste: { backgroundColor: '#1F1F1F', color: 'white', padding: 14, borderRadius: 10, fontSize: 16, borderWidth: 1, borderColor: '#333' },
-  botonGuardar: { backgroundColor: '#E50914', padding: 16, borderRadius: 12, alignItems: 'center' },
+  botonGuardar: { backgroundColor: '#C9A84C', padding: 16, borderRadius: 12, alignItems: 'center' },
   botonCancelar: { backgroundColor: '#222', padding: 16, borderRadius: 12, alignItems: 'center' },
   profileButton: { backgroundColor: '#222', padding: 16, borderRadius: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   tituloSeccion: { color: 'white', fontSize: 28, fontWeight: 'bold', marginBottom: 25, marginTop: 10, textAlign: 'center' },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   whiteText: { color: 'white', fontSize: 22 },
-  searchContainer: { flexDirection: 'row', alignItems: 'center', padding: 10 },
-  searchInput: { backgroundColor: '#1A1A1A', color: 'white', padding: 12, borderRadius: 10, flex: 1 },
-  filterCircle: { width: 45, height: 45, borderRadius: 22.5, backgroundColor: '#E50914', justifyContent: 'center', alignItems: 'center', marginLeft: 10 },
-  filterMenu: { backgroundColor: '#1A1A1A', padding: 15, marginHorizontal: 10, borderRadius: 10, marginBottom: 10 },
-  filterRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  filterInput: { backgroundColor: '#262626', color: 'white', padding: 8, borderRadius: 6, flex: 1, marginHorizontal: 3, fontSize: 11 },
+  searchContainer: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
+searchInput: { backgroundColor: 'transparent', color: 'white', fontSize: 15, fontStyle: 'italic', paddingVertical: 8, paddingHorizontal: 0 },
+searchUnderline: { height: 1, backgroundColor: '#333', marginTop: 2 },
+searchUnderlineActive: { backgroundColor: '#C9A84C' },
   movieCard: { flex: 0.5, margin: 8 },
   posterImage: { width: '100%', height: 230, borderRadius: 12 },
   movieTitle: { color: 'white', marginTop: 5, fontSize: 11, textAlign: 'center' },
-  categoryTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', marginLeft: 15, marginBottom: 10 },
+  categoryTitle: { color: '#C9A84C', fontSize: 16, fontWeight: '700', marginLeft: 15, marginBottom: 10, letterSpacing: 1 },
   detailImage: { width: '100%', height: 350, borderRadius: 20, resizeMode: 'contain' },
   detailTitle: { color: 'white', fontSize: 26, fontWeight: 'bold', marginTop: 15 },
   sectionTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', marginTop: 15 },
@@ -812,10 +817,11 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 8,
   },
-  navbar: { backgroundColor: '#111', position: 'absolute', bottom: 0, width: '100%', height: 95 },
-  navButton: { paddingHorizontal: 15, height: 40, justifyContent: 'center', marginHorizontal: 5, borderRadius: 20, backgroundColor: '#222' },
-  activeButton: { backgroundColor: '#E50914' },
-  navText: { color: '#fff', fontWeight: 'bold' },
+  navbar: { backgroundColor: '#0F0F0F', position: 'absolute', bottom: 0, width: '100%', height: 70, flexDirection: 'row', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
+navButton: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 10, marginHorizontal: 4, borderRadius: 10 },
+activeButton: { backgroundColor: 'rgba(201,168,76,0.15)', borderWidth: 1, borderColor: 'rgba(201,168,76,0.4)' },
+navText: { color: '#666', fontSize: 11, marginTop: 2 },
+navTextActive: { color: '#C9A84C', fontWeight: '600' },
   containerJuegos: { flex: 1, backgroundColor: '#0A0A0A' },
   tarjetaJuego: { backgroundColor: '#1A1A1A', width: '100%', padding: 22, borderRadius: 16, marginBottom: 14, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#333' },
   iconoJuego: { fontSize: 32, marginRight: 20, width: 40 },
@@ -830,7 +836,7 @@ const styles = StyleSheet.create({
   iconoLogro: { fontSize: 38, marginRight: 20, width: 48 },
   tituloLogro: { color: 'white', fontSize: 19, fontWeight: '600', marginBottom: 4 },
   descripcionLogro: { color: '#AAAAAA', fontSize: 14, lineHeight: 20 },
-  progresoLogro: { color: '#E50914', fontSize: 13, fontWeight: '500', marginTop: 6 },
+  progresoLogro: { color: '#C9A84C', fontSize: 13, fontWeight: '500', marginTop: 6 },
   containerPerfil: { flex: 1, backgroundColor: '#0A0A0A' },
   perfilHeader: { alignItems: 'center', marginBottom: 30 },
   avatarContainer: { marginBottom: 12 },
@@ -848,11 +854,11 @@ const styles = StyleSheet.create({
   recentTitle: { color: '#ccc', fontSize: 12, marginTop: 6, textAlign: 'center' },
   detalleStats: { backgroundColor: '#1A1A1A', padding: 18, borderRadius: 16, marginBottom: 20 },
   detalleText: { color: '#ccc', fontSize: 15, marginBottom: 10 },
-  verMasButton: { backgroundColor: '#E50914', padding: 14, borderRadius: 12, alignItems: 'center' },
+  verMasButton: { backgroundColor: '#C9A84C', padding: 14, borderRadius: 12, alignItems: 'center' },
   containerAjustes: { flex: 1, backgroundColor: '#0A0A0A' },
   tarjetaAjuste: { backgroundColor: '#1A1A1A', width: '100%', padding: 22, borderRadius: 16, marginBottom: 14, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#333' },
-  tarjetaCerrarSesion: { backgroundColor: '#2A0A0A', borderColor: '#E50914' },
+  tarjetaCerrarSesion: { backgroundColor: '#1A1500', borderColor: '#C9A84C' },
   iconoAjuste: { fontSize: 32, marginRight: 20, width: 40 },
-  tituloAjuste: { color: 'white', fontSize: 19, fontWeight: '600', marginBottom: 4 },
+    tituloAjuste: { color: 'white', fontSize: 19, fontWeight: '600', marginBottom: 4 },
   descripcionAjuste: { color: '#AAAAAA', fontSize: 14, lineHeight: 20 },
 });
