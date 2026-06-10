@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, ActivityIndicator, ScrollView, TextInput, Linking } from 'react-native';
 import { SafeAreaView, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_KEY = '2a8c0216dfb393e18e9edff711dc1c48';
 const BASE_URL = 'https://api.themoviedb.org/3';
@@ -56,6 +57,14 @@ const ajustesOpciones = [
 
 function MainApp() {
   const insets = useSafeAreaInsets();
+  const [user, setUser] = useState(null);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [showRegister, setShowRegister] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [activeSection, setActiveSection] = useState('Películas');
   const [showNotificationsScreen, setShowNotificationsScreen] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -72,6 +81,8 @@ function MainApp() {
   const [peliculasFavoritas, setPeliculasFavoritas] = useState([]);
   const [peliculasVerDespues, setPeliculasVerDespues] = useState([]);
   const [activeTab, setActiveTab] = useState('info');
+  const [expandedOverview, setExpandedOverview] = useState(false);
+  const [movieCollection, setMovieCollection] = useState(null);
   const [trailerKey, setTrailerKey] = useState(null);
   const [categories, setCategories] = useState([]);
   const [movieCategories, setMovieCategories] = useState([]);
@@ -114,9 +125,9 @@ function MainApp() {
         const topRated = await fetch(`${BASE_URL}/movie/top_rated?api_key=${API_KEY}&language=es-ES`).then(r => r.json());
         const oscars = await fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&language=es-ES&with_awards=true&sort_by=vote_average.desc&vote_count.gte=1000`).then(r => r.json());
         const especiales = [
-          { id: 'trending', name: '🔥 Tendencia', movies: trending.results },
-          { id: 'top_rated', name: '⭐ Mejor valoradas', movies: topRated.results },
-          { id: 'oscars', name: '🏆 Oscar', movies: oscars.results },
+          { id: 'trending', name: 'Tendencia', movies: trending.results },
+{ id: 'top_rated', name: 'Mejor valoradas', movies: topRated.results },
+{ id: 'oscars', name: 'Oscar', movies: oscars.results },
         ];
         const normales = await Promise.all(
           categories.map(async (cat) => {
@@ -179,166 +190,209 @@ function MainApp() {
     setActiveTab('info');
     
     fetch(`${BASE_URL}/movie/${movie.id}?api_key=${API_KEY}&language=es-ES&append_to_response=credits`)
-      .then(res => res.json())
-      .then(data => setMovieDetails(data));
-
+  .then(res => res.json())
+  .then(data => setMovieDetails({...data, certification: null}));
     fetch(`${BASE_URL}/movie/${movie.id}/videos?api_key=${API_KEY}&language=es-ES`)
       .then(res => res.json())
       .then(data => {
         const trailer = data.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
         if (trailer) setTrailerKey(trailer.key);
       });
+
+fetch(`${BASE_URL}/movie/${movie.id}/release_dates?api_key=${API_KEY}`)
+  .then(res => res.json())
+  .then(data => {
+    const us = data.results?.find(r => r.iso_3166_1 === 'US');
+const ar = data.results?.find(r => r.iso_3166_1 === 'AR');
+const region = ar || us;
+    const releases = region?.release_dates || [];
+const allReleases = data.results?.flatMap(r => r.release_dates?.map(rd => rd.certification)).filter(c => c && c !== '') || [];
+const cert = releases.find(r => r.certification && r.certification !== '')?.certification || allReleases[0];
+    setMovieDetails(prev => prev ? { ...prev, certification: cert || 'NR' } : prev);
+  });
+
+setMovieCollection(null);
+fetch(`${BASE_URL}/movie/${movie.id}?api_key=${API_KEY}&language=es-ES`)
+  .then(res => res.json())
+  .then(data => {
+    if (data.belongs_to_collection) {
+      fetch(`${BASE_URL}/collection/${data.belongs_to_collection.id}?api_key=${API_KEY}&language=es-ES`)
+        .then(res => res.json())
+        .then(col => setMovieCollection(col));
+    }
+  });
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.content}>
+    {showAuthModal && (
+  <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 999, justifyContent: 'center', padding: 30 }}>
+    <Text style={{ color: '#C9A84C', fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>
+      {showRegister ? 'Crear cuenta' : 'Iniciar sesión'}
+    </Text>
+    {authError ? <Text style={{ color: '#ff4444', textAlign: 'center', marginBottom: 10 }}>{authError}</Text> : null}
+    <TextInput
+      placeholder="Usuario"
+      placeholderTextColor="#666"
+      style={{ backgroundColor: '#1A1A1A', color: 'white', padding: 14, borderRadius: 10, marginBottom: 10, borderWidth: 1, borderColor: '#333' }}
+      value={loginEmail}
+      onChangeText={setLoginEmail}
+      autoCapitalize="none"
+    />
+    <TextInput
+      placeholder="Contraseña"
+      placeholderTextColor="#666"
+      style={{ backgroundColor: '#1A1A1A', color: 'white', padding: 14, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: '#333' }}
+      value={loginPassword}
+      onChangeText={setLoginPassword}
+      secureTextEntry
+    />
+    <TouchableOpacity
+      style={{ backgroundColor: '#C9A84C', padding: 15, borderRadius: 10, alignItems: 'center', marginBottom: 10 }}
+      onPress={async () => {
+        if (!loginEmail || !loginPassword) { setAuthError('Completá todos los campos'); return; }
+        try {
+          const stored = await AsyncStorage.getItem('user_' + loginEmail);
+          if (showRegister) {
+            if (stored) { setAuthError('Ese usuario ya existe'); return; }
+            await AsyncStorage.setItem('user_' + loginEmail, loginPassword);
+            setUser({ username: loginEmail });
+            setShowAuthModal(false);
+          } else {
+            if (!stored || stored !== loginPassword) { setAuthError('Usuario o contraseña incorrectos'); return; }
+            setUser({ username: loginEmail });
+            setShowAuthModal(false);
+          }
+        } catch(e) { setAuthError('Error, intentá de nuevo'); }
+      }}
+    >
+      <Text style={{ color: '#080808', fontWeight: 'bold', fontSize: 16 }}>
+        {showRegister ? 'Registrarse' : 'Entrar'}
+      </Text>
+    </TouchableOpacity>
+    <TouchableOpacity onPress={() => setShowRegister(!showRegister)}>
+      <Text style={{ color: '#C9A84C', textAlign: 'center', marginBottom: 16 }}>
+        {showRegister ? '¿Ya tenés cuenta? Iniciá sesión' : '¿No tenés cuenta? Registrate'}
+      </Text>
+    </TouchableOpacity>
+    <TouchableOpacity onPress={() => setShowAuthModal(false)}>
+      <Text style={{ color: '#666', textAlign: 'center' }}>Cancelar</Text>
+    </TouchableOpacity>
+  </View>
+)}
+      <View style={[styles.content, selectedMovie && { marginBottom: 0 }]}>
         {activeSection === 'Películas' ? (
           selectedMovie ? (
   <View style={{ flex: 1 }}>
 
     {/* BARRA DE PESTAÑAS */}
-    <View style={{ flexDirection: 'row', backgroundColor: '#0F0F0F', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' }}>
+    <View style={{ flexDirection: 'row', backgroundColor: '#080808', borderBottomWidth: 1, borderBottomColor: 'rgba(201,168,76,0.2)' }}>
+  <TouchableOpacity onPress={() => { setSelectedMovie(null); setActiveTab('info'); }} style={{ paddingHorizontal: 16, paddingVertical: 12, justifyContent: 'center', alignItems: 'center' }}>
+    <Text style={{ color: '#C9A84C', fontSize: 16 }}>←</Text>
+  </TouchableOpacity>
+  {[
+    { id: 'info', label: 'Info' },
+{ id: 'critica', label: 'critica' },
+{ id: 'reparto', label: 'Reparto' },
+{ id: 'similar', label: 'Similares' },
 
-      <TouchableOpacity
-  onPress={() => { setSelectedMovie(null); setActiveTab('info'); }}
-  style={{ paddingHorizontal: 12, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'info' ? 'rgba(201,168,76,0.2)' : '#1A1A1A',borderRightWidth: 1, borderRightColor: '#333' }}
->
-  <Text style={{ fontSize: 18 }}>←</Text>
-</TouchableOpacity>
-
-<TouchableOpacity
-  onPress={() => setActiveTab('info')}
-  style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'info' ? 'rgba(201,168,76,0.2)' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
->
-  <Text style={{ fontSize: 22 }}>🎬</Text>
-</TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => setActiveTab('puntuacion')}
-        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'puntuacion' ? 'rgba(201,168,76,0.2)' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
-      >
-        <Text style={{ fontSize: 22 }}>⭐</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => setActiveTab('reparto')}
-        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'reparto' ? 'rgba(201,168,76,0.2)' : '#1A1A1A', borderRightWidth: 1, borderRightColor: '#333' }}
-      >
-        <Text style={{ fontSize: 22 }}>👥</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => setActiveTab('similar')}
-        style={{ flex: 1, paddingVertical: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: activeTab === 'similar' ? 'rgba(201,168,76,0.2)' : '#1A1A1A' }}
-      >
-        <Text style={{ fontSize: 22 }}>🎲</Text>
-      </TouchableOpacity>
-
+  ].map((tab) => (
+    <TouchableOpacity key={tab.id} onPress={() => setActiveTab(tab.id)} style={{ flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: activeTab === tab.id ? '#C9A84C' : 'transparent' }}>
+      <Text style={{ color: activeTab === tab.id ? '#C9A84C' : '#666', fontSize: 13, fontWeight: activeTab === tab.id ? '600' : '400' }}>{tab.label}</Text>
+    </TouchableOpacity>
+  ))}
     </View>
+<ScrollView contentContainerStyle={{ padding: 20, paddingTop: 0 }}>
 
-    <ScrollView contentContainerStyle={{ padding: 20 }}>
-    {trailerKey && (
+    {trailerKey ? (
   <TouchableOpacity
-  style={{ backgroundColor: '#C9A84C', padding: 16, borderRadius: 12, alignItems: 'center', marginBottom: 20, flexDirection: 'row', justifyContent: 'center', gap: 10 }}
-  onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${trailerKey}`)}
->
-  <Text style={{ color: '#080808', fontSize: 16, fontWeight: 'bold' }}>▶  VER TRAILER</Text>
-</TouchableOpacity>
-  )}
-              {/* POSTER + DATOS */}
-<View style={{ flexDirection: 'row', marginBottom: 20 }}>
-  
-  <View style={{ flex: 1, justifyContent: 'space-around', paddingRight: 10 }}>
-    <Text style={{ color: '#AAA', fontSize: 13 }}>🎥 {movieDetails?.credits?.crew?.find(c => c.job === 'Director')?.name || '...'}</Text>
-    <Text style={{ color: '#AAA', fontSize: 13 }}>⏱ {movieDetails?.runtime} min</Text>
-    <Text style={{ color: '#AAA', fontSize: 13 }}>🌍 {movieDetails?.production_countries?.[0]?.name || '...'}</Text>
+    style={{ marginBottom: 20, marginHorizontal: -20, borderRadius: 0, overflow: 'hidden', position: 'relative' }}
+    onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${trailerKey}`)}
+  >
+    <Image
+  source={{ uri: `https://img.youtube.com/vi/${trailerKey}/maxresdefault.jpg` }}
+  style={{ width: '100%', height: 200, borderRadius: 0 }}
+/>
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+      <Text style={{ color: 'white', fontSize: 48, marginLeft: 6 }}>▶</Text>
+      <Text style={{ color: 'white', fontSize: 14, fontWeight: 'bold', marginTop: 10, letterSpacing: 2 }}>TRÁILER</Text>
+    </View>
+  </TouchableOpacity>
+) : (
+  <View style={{ marginBottom: 0, marginHorizontal: -20, height: 200, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0F0F0F' }}>
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(201,168,76,0.05)' }} />
+    <Text style={{ color: 'rgba(201,168,76,0.2)', fontSize: 80, fontWeight: 'bold', position: 'absolute' }}>✦</Text>
+    <Text style={{ color: '#C9A84C', fontSize: 28, fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 30, zIndex: 1 }}>{selectedMovie?.title}</Text>
+    <Text style={{ color: '#555', fontSize: 13, marginTop: 8 }}>{selectedMovie?.release_date?.substring(0, 4)}</Text>
   </View>
-
-  <Image 
-    source={{ uri: `https://image.tmdb.org/t/p/w300${selectedMovie.poster_path}` }} 
-    style={{ width: 120, height: 180, borderRadius: 12 }} 
-  />
-
-  <View style={{ flex: 1, justifyContent: 'space-around', paddingLeft: 10 }}>
-    <Text style={{ color: '#AAA', fontSize: 13 }}>📅 {movieDetails?.release_date?.substring(0, 4) || '...'}</Text>
-    <Text style={{ color: '#AAA', fontSize: 13 }}>🗣️ {movieDetails?.original_language?.toUpperCase() || '...'}</Text>
-    <Text style={{ color: '#AAA', fontSize: 13 }}>🔞 {movieDetails?.adult ? '+18' : 'ATP'}</Text>
+)}
+<View style={{ flexDirection: 'row', marginBottom: 20, marginTop: trailerKey ? -50 : -30, zIndex: 10 }}>
+  <View style={{ flex: 1, justifyContent: 'space-around', paddingRight: 10, paddingTop: 20 }}>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>Dir. {movieDetails?.credits?.crew?.find(c => c.job === 'Director')?.name || '...'}</Text>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>{movieDetails?.runtime} min</Text>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>{movieDetails?.production_countries?.[0]?.name || '...'}</Text>
   </View>
-
+  <Image source={{ uri: `https://image.tmdb.org/t/p/w300${selectedMovie.poster_path}` }} style={{ width: 120, height: 180, borderRadius: 12, borderWidth: 2, borderColor: '#C9A84C' }} />
+  <View style={{ flex: 1, justifyContent: 'space-around', paddingLeft: 10, paddingTop: 20 }}>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>{movieDetails?.original_language === 'en' ? 'Inglés' : movieDetails?.original_language === 'es' ? 'Español' : movieDetails?.original_language === 'fr' ? 'Francés' : movieDetails?.original_language === 'de' ? 'Alemán' : movieDetails?.original_language === 'it' ? 'Italiano' : movieDetails?.original_language === 'pt' ? 'Portugués' : movieDetails?.original_language === 'ja' ? 'Japonés' : movieDetails?.original_language === 'ko' ? 'Coreano' : movieDetails?.original_language?.toUpperCase() || '...'}</Text>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>{movieDetails?.release_date ? movieDetails.release_date.split('-').reverse().join('/') : '...'}</Text>
+    <Text style={{ color: '#AAA', fontSize: 13 }}>{movieDetails?.certification || 'NR'}</Text>
+  </View>
 </View>
-
-{/* NOMBRE Y VALORACION */}
-<Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold' }}>{selectedMovie.title}</Text>
-<Text style={{ color: '#C9A84C', fontSize: 16, marginTop: 4, marginBottom: 16 }}>★ {movieDetails?.vote_average?.toFixed(1)} TMDB</Text>
-              {movieDetails && (
-                <>
-                <Text style={styles.sectionTitle}>📖 Descripción</Text>
-                  <Text style={styles.detailOverview}>{movieDetails.overview}</Text>
-
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, marginBottom: 10, gap: 8 }}>
-                    {/* VISTA */}
-                    <TouchableOpacity
-                      onPress={() => {
-                        const yaVista = peliculasVistas.some(p => p.id === selectedMovie.id);
-                        if (yaVista) {
-                          setPeliculasVistas(peliculasVistas.filter(p => p.id !== selectedMovie.id));
-                        } else {
-                          setPeliculasVistas([...peliculasVistas, { id: selectedMovie.id, title: selectedMovie.title, poster_path: selectedMovie.poster_path }]);
-                        }
-                      }}
-                      style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: peliculasVistas.some(p => p.id === selectedMovie.id) ? '#1A3A1A' : '#1A1A1A', borderWidth: 1, borderColor: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#C9A84C' : '#333' }}
-                    >
-                      <Text style={{ fontSize: 18 }}>{peliculasVistas.some(p => p.id === selectedMovie.id) ? '✅' : '○'}</Text>
-                      <Text style={{ color: peliculasVistas.some(p => p.id === selectedMovie.id) ? '#4CAF50' : '#888', fontSize: 11, marginTop: 4 }}>Vista</Text>
-                    </TouchableOpacity>
-
-                    {/* FAVORITA */}
-                    <TouchableOpacity
-                      onPress={() => {
-                        const yaFavorita = peliculasFavoritas.some(p => p.id === selectedMovie.id);
-                        if (yaFavorita) {
-                          setPeliculasFavoritas(peliculasFavoritas.filter(p => p.id !== selectedMovie.id));
-                        } else {
-                          setPeliculasFavoritas([...peliculasFavoritas, { id: selectedMovie.id, title: selectedMovie.title, poster_path: selectedMovie.poster_path }]);
-                        }
-                      }}
-                      style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#1A1500' : '#1A1A1A', borderWidth: 1, color: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#C9A84C' : '#888' }}
-                    >
-                      <Text style={{ fontSize: 18 }}>{peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '❤️' : '🤍'}</Text>
-                      <Text style={{ color: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#E50914' : '#888', fontSize: 11, marginTop: 4 }}>Favorita</Text>
-                    </TouchableOpacity>
-
-                    {/* VER DESPUÉS */}
-                    <TouchableOpacity
-                      onPress={() => {
-                        const yaVerDespues = peliculasVerDespues.some(p => p.id === selectedMovie.id);
-                        if (yaVerDespues) {
-                          setPeliculasVerDespues(peliculasVerDespues.filter(p => p.id !== selectedMovie.id));
-                        } else {
-                          setPeliculasVerDespues([...peliculasVerDespues, { id: selectedMovie.id, title: selectedMovie.title, poster_path: selectedMovie.poster_path }]);
-                        }
-                      }}
-                      style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: peliculasVerDespues.some(p => p.id === selectedMovie.id) ? '#1A1A3A' : '#1A1A1A', borderWidth: 1, borderColor: peliculasVerDespues.some(p => p.id === selectedMovie.id) ? '#4444FF' : '#333' }}
-                    >
-                      <Text style={{ fontSize: 18 }}>{peliculasVerDespues.some(p => p.id === selectedMovie.id) ? '🔖' : '🕐'}</Text>
-                      <Text style={{ color: peliculasVerDespues.some(p => p.id === selectedMovie.id) ? '#4444FF' : '#888', fontSize: 11, marginTop: 4 }}>Ver después</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <Text style={styles.sectionTitle}>🎬 Reparto</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {movieDetails.credits?.cast?.slice(0, 10).map(actor => (
-                      <View key={actor.id} style={{ marginRight: 10, alignItems: 'center' }}>
-                        <Image source={{ uri: `https://image.tmdb.org/t/p/w200${actor.profile_path}` }} style={{ width: 80, height: 80, borderRadius: 40 }} />
-                        <Text style={{ color: 'white', fontSize: 10, marginTop: 5 }}>{actor.name}</Text>
-                      </View>
-                    ))}
-                  </ScrollView>
-                </>
-              )}
-            </ScrollView>
-            </View>
+<Text style={{ color: 'white', fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginTop: -15 }}>
+  {selectedMovie.title} <Text style={{ color: '#C9A84C', fontSize: 18 }}>★ {movieDetails?.vote_average?.toFixed(1)}</Text>
+</Text>
+{movieDetails && (
+  <>
+  <Text style={styles.sectionTitle}>Descripción</Text>
+  <Text style={styles.detailOverview} numberOfLines={expandedOverview ? undefined : 5}>{movieDetails.overview}</Text>
+  <TouchableOpacity onPress={() => setExpandedOverview(!expandedOverview)}>
+    <Text style={{ color: '#C9A84C', fontSize: 13, marginTop: 4 }}>{expandedOverview ? 'Ver menos' : 'Ver más...'}</Text>
+  </TouchableOpacity>
+  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20, marginBottom: 10, gap: 8 }}>
+    <TouchableOpacity onPress={() => { if (!user) { setShowAuthModal(true); return; } const yaVista = peliculasVistas.some(p => p.id === selectedMovie.id); if (yaVista) { setPeliculasVistas(peliculasVistas.filter(p => p.id !== selectedMovie.id)); } else { setPeliculasVistas([...peliculasVistas, { id: selectedMovie.id, title: selectedMovie.title, poster_path: selectedMovie.poster_path }]); } }} style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: peliculasVistas.some(p => p.id === selectedMovie.id) ? '#1A3A1A' : '#1A1A1A', borderWidth: 1, borderColor: peliculasVistas.some(p => p.id === selectedMovie.id) ? '#C9A84C' : '#333' }}>
+      <Text style={{ fontSize: 18 }}>{peliculasVistas.some(p => p.id === selectedMovie.id) ? '✅' : '○'}</Text>
+      <Text style={{ color: peliculasVistas.some(p => p.id === selectedMovie.id) ? '#4CAF50' : '#888', fontSize: 11, marginTop: 4 }}>Vista</Text>
+    </TouchableOpacity>
+    <TouchableOpacity onPress={() => { if (!user) { setShowAuthModal(true); return; } const yaFavorita = peliculasFavoritas.some(p => p.id === selectedMovie.id); if (yaFavorita) { setPeliculasFavoritas(peliculasFavoritas.filter(p => p.id !== selectedMovie.id)); } else { setPeliculasFavoritas([...peliculasFavoritas, { id: selectedMovie.id, title: selectedMovie.title, poster_path: selectedMovie.poster_path }]); } }} style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#1A1500' : '#1A1A1A', borderWidth: 1, borderColor: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#C9A84C' : '#333' }}>
+      <Text style={{ fontSize: 18 }}>{peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '❤️' : '🤍'}</Text>
+      <Text style={{ color: peliculasFavoritas.some(p => p.id === selectedMovie.id) ? '#E50914' : '#888', fontSize: 11, marginTop: 4 }}>Favorita</Text>
+    </TouchableOpacity>
+    <TouchableOpacity onPress={() => { if (!user) { setShowAuthModal(true); return; } const yaVerDespues = peliculasVerDespues.some(p => p.id === selectedMovie.id); if (yaVerDespues) { setPeliculasVerDespues(peliculasVerDespues.filter(p => p.id !== selectedMovie.id)); } else { setPeliculasVerDespues([...peliculasVerDespues, { id: selectedMovie.id, title: selectedMovie.title, poster_path: selectedMovie.poster_path }]); } }} style={{ flex: 1, padding: 12, borderRadius: 12, alignItems: 'center', backgroundColor: peliculasVerDespues.some(p => p.id === selectedMovie.id) ? '#1A1A3A' : '#1A1A1A', borderWidth: 1, borderColor: peliculasVerDespues.some(p => p.id === selectedMovie.id) ? '#4444FF' : '#333' }}>
+      <Text style={{ fontSize: 18 }}>{peliculasVerDespues.some(p => p.id === selectedMovie.id) ? '🔖' : '🕐'}</Text>
+      <Text style={{ color: peliculasVerDespues.some(p => p.id === selectedMovie.id) ? '#4444FF' : '#888', fontSize: 11, marginTop: 4 }}>Ver después</Text>
+    </TouchableOpacity>
+  </View>
+  {movieDetails.genres && movieDetails.genres.length > 0 && (
+    <>
+      <Text style={[styles.sectionTitle, { marginBottom: 10 }]}>Géneros</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 15 }}>
+        {movieDetails.genres.map((genre) => (
+          <View key={genre.id} style={{ backgroundColor: 'rgba(201,168,76,0.15)', borderWidth: 1, borderColor: 'rgba(201,168,76,0.4)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 }}>
+            <Text style={{ color: '#C9A84C', fontSize: 13 }}>{genre.name}</Text>
+          </View>
+        ))}
+      </View>
+    </>
+  )}
+  {movieCollection && movieCollection.parts && movieCollection.parts.length > 1 && (
+    <View style={{ marginBottom: 20 }}>
+      <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>Saga: {movieCollection.name}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {movieCollection.parts.sort((a, b) => a.release_date?.localeCompare(b.release_date)).map((part) => (
+          <TouchableOpacity key={part.id} onPress={() => openMovieDetail(part)} style={{ marginRight: 12, width: 100, opacity: part.id === selectedMovie.id ? 0.5 : 1 }}>
+            <Image source={{ uri: `https://image.tmdb.org/t/p/w200${part.poster_path}` }} style={{ width: 100, height: 150, borderRadius: 10, borderWidth: part.id === selectedMovie.id ? 2 : 1, borderColor: part.id === selectedMovie.id ? '#C9A84C' : 'rgba(201,168,76,0.3)' }} />
+            <Text style={{ color: '#ccc', fontSize: 11, marginTop: 6, textAlign: 'center' }} numberOfLines={1}>{part.title}</Text>
+            <Text style={{ color: '#666', fontSize: 10, textAlign: 'center' }}>{part.release_date?.substring(0, 4)}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  )}
+  </>
+)}
+</ScrollView>
+</View>
           ) : (
             <View style={{ flex: 1 }}>
               <View style={styles.searchContainer}>
@@ -747,7 +801,7 @@ function MainApp() {
         )}
               </View>
 
-      <View style={styles.navbar}>
+      {!selectedMovie && <View style={styles.navbar}>
   {[
   { name: 'Películas', icon: '🎬' },
   { name: 'Recomendar', icon: '✨' },
@@ -764,7 +818,7 @@ function MainApp() {
     <Text style={[styles.navText, activeSection === item.name && styles.navTextActive]}>{item.name}</Text>
   </TouchableOpacity>
 ))}
-</View>
+</View>}
     </SafeAreaView>
   );
 }
